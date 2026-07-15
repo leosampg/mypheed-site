@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mypheed — culling de fotos rápido, no seu computador</title>
+<meta name="description" content="Selecione milhares de fotos na velocidade do teclado. O Mypheed lê o preview embutido do RAW — estrelas, cores, pick/reject, XMP para o Lightroom. Grátis, roda 100% local. Windows e macOS.">
+<link rel="canonical" href="https://mypheed.myph.com.br/">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<meta property="og:title" content="Mypheed — culling de fotos rápido">
+<meta property="og:description" content="Milhares de fotos na velocidade do teclado. Lê o preview embutido do RAW, grava XMP para o Lightroom e nada sai do seu computador. Grátis — Windows e macOS.">
+<meta property="og:image" content="https://mypheed.myph.com.br/img/demo/LEO_0231.jpg">
+<meta property="og:url" content="https://mypheed.myph.com.br/">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* mesma paleta do app: espresso / porcelain / ember */
+    --bg: #14100c; --bg2: #1a1512; --bg3: #241c17; --line: #2e251e;
+    --fg: #f4ede3; --muted: #9c9184;
+    --primary: #ee5a2c; --gold: #d6a44a; --pick: #46a758; --reject: #e5484d;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.55 "Hanken Grotesk", -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  a { color: var(--gold); }
+  code { background: var(--bg3); padding: 2px 6px; border-radius: 5px; font-size: .92em; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 0 20px; }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(20,16,12,.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav { display: flex; align-items: center; gap: 18px; padding: 12px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; color: var(--fg); text-decoration: none; }
+  .brand img { width: 28px; height: 28px; border-radius: 7px; }
+  .nav .links { margin-left: auto; display: flex; gap: 18px; align-items: center; }
+  .nav a.lnk { color: var(--muted); text-decoration: none; font-size: 14.5px; }
+  .nav a.lnk:hover { color: var(--fg); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    background: var(--bg3); color: var(--fg); border: 1px solid var(--line);
+    padding: 12px 20px; border-radius: 10px; text-decoration: none;
+    font-weight: 700; font-size: 15.5px; transition: transform .08s ease, background .15s;
+  }
+  .btn:hover { background: #2c221b; transform: translateY(-1px); }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn.primary:hover { background: #ff6b3d; }
+  .btn small { display: block; font-weight: 400; font-size: 11.5px; opacity: .8; }
+  .btn .ic { font-size: 20px; }
+  .btn-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .hero { padding: 72px 0 30px; text-align: center; }
+  .hero h1 { font-size: clamp(30px, 5.4vw, 52px); line-height: 1.08; margin: 0 0 18px; font-weight: 800; letter-spacing: -.5px; }
+  .hero h1 em { color: var(--primary); font-style: normal; }
+  .hero p.lead { font-size: clamp(16px, 2.4vw, 19px); color: var(--muted); max-width: 640px; margin: 0 auto 30px; }
+  .cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .meta-line { color: var(--muted); font-size: 13.5px; margin-top: 14px; }
+  .meta-line b { color: var(--gold); font-weight: 600; }
+
+  /* ------- mockup da grade (fiel ao app) ------- */
+  .shot { margin: 46px auto 0; max-width: 900px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 30px 80px #000c; background: var(--bg); text-align: left; }
+  .shot .titlebar { display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: var(--bg2); border-bottom: 1px solid var(--line); }
+  .shot .dot { width: 11px; height: 11px; border-radius: 50%; background: #3a2f26; }
+  .shot .tb-title { margin-left: 8px; font-size: 12px; color: var(--muted); }
+  .shot .toolbar { display: flex; gap: 8px; padding: 8px 12px; background: var(--bg2); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .shot .tbtn { font-size: 12px; padding: 4px 10px; border-radius: 7px; background: var(--bg3); color: var(--muted); border: 1px solid var(--line); }
+  .shot .tbtn.hot { color: #fff; background: var(--primary); border-color: var(--primary); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; }
+  .cell { border: 2px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--bg2); position: relative; }
+  .cell.cursor { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); }
+  .cell .thumbwrap { position: relative; background: #120d0a; aspect-ratio: 4/3; }
+  .cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .badges { position: absolute; left: 7px; bottom: 7px; display: flex; gap: 5px; align-items: center; }
+  .stars { color: var(--star, #d6a44a); color: var(--gold); font-size: 13px; text-shadow: 0 1px 2px #000; letter-spacing: -1px; }
+  .flagtag { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; }
+  .flagtag.pick { background: var(--pick); color: #fff; }
+  .colordot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #0006; }
+  .cap { display: flex; align-items: center; gap: 6px; padding: 4px 7px; font-size: 11px; color: var(--muted); background: var(--bg2); }
+  .cap .ft { margin-left: auto; font-size: 9.5px; border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; letter-spacing: .4px; }
+  .statusbar { padding: 7px 14px; font-size: 11.5px; color: var(--muted); background: var(--bg2); border-top: 1px solid var(--line); }
+  .statusbar b { color: var(--pick); }
+
+  section { padding: 70px 0 10px; }
+  section h2 { font-size: clamp(24px, 3.6vw, 34px); margin: 0 0 8px; letter-spacing: -.3px; }
+  section p.sub { color: var(--muted); margin: 0 0 34px; max-width: 640px; }
+
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: var(--bg2); border: 1px solid var(--line); border-radius: 14px; padding: 22px; }
+  .card .em { font-size: 24px; }
+  .card h3 { margin: 10px 0 8px; font-size: 17.5px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .card kbd { background: var(--bg3); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; font-size: 12px; font-family: inherit; color: var(--fg); }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 0; }
+  .tabs button {
+    background: var(--bg2); color: var(--muted); border: 1px solid var(--line); border-bottom: none;
+    padding: 11px 22px; border-radius: 12px 12px 0 0; font: inherit; font-weight: 700; cursor: pointer;
+  }
+  .tabs button.on { background: var(--bg3); color: var(--fg); }
+  .tabpane { background: var(--bg3); border: 1px solid var(--line); border-radius: 0 14px 14px 14px; padding: 26px; }
+  .tabpane[hidden] { display: none; }
+  .steps { margin: 0; padding-left: 22px; }
+  .steps li { margin-bottom: 14px; }
+  .steps li::marker { color: var(--primary); font-weight: 800; }
+  .cmd { display: flex; align-items: center; gap: 10px; background: #0e0a07; border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; font-family: Consolas, Menlo, monospace; font-size: 13.5px; overflow-x: auto; }
+  .cmd code { background: none; padding: 0; white-space: nowrap; }
+  .cmd button { margin-left: auto; flex: 0 0 auto; background: var(--bg3); border: 1px solid var(--line); color: var(--muted); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px; }
+  .cmd button:hover { color: var(--fg); }
+  .note { font-size: 13.5px; color: var(--muted); background: var(--bg2); border-left: 3px solid var(--gold); padding: 10px 14px; border-radius: 0 8px 8px 0; margin-top: 16px; }
+
+  details { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; margin-bottom: 10px; }
+  details summary { cursor: pointer; font-weight: 700; font-size: 15.5px; }
+  details p { color: var(--muted); font-size: 14.5px; margin: 10px 0 2px; }
+
+  .dl-meta { color: var(--muted); font-size: 12.5px; margin-top: 18px; }
+  .dl-meta code { font-size: 11px; word-break: break-all; }
+
+  footer { margin-top: 80px; border-top: 1px solid var(--line); padding: 26px 0 40px; color: var(--muted); font-size: 14px; display: flow-root; }
+  footer .wrap { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  footer .sp { margin-left: auto; }
+
+  @media (max-width: 640px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .nav .links a.lnk { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#"><img src="img/icon-192.png" alt="" width="28" height="28">Mypheed</a>
+    <nav class="links">
+      <a class="lnk" href="#recursos">Recursos</a>
+      <a class="lnk" href="#instalar">Como instalar</a>
+      <a class="lnk" href="#faq">Perguntas</a>
+      <a class="btn primary" style="padding:8px 16px;font-size:14px" href="#instalar">Baixar</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <h1>Milhares de fotos selecionadas<br>na <em>velocidade do teclado</em>.</h1>
+    <p class="lead">O Mypheed lê o JPEG que a sua câmera já embutiu no RAW — sem renderizar arquivo pesado. Estrelas, cores, pick/reject e metadados voando, com tudo rodando no seu computador.</p>
+    <div class="cta">
+      <div>
+        <a class="btn primary" id="dlWin" href="downloads/Mypheed-Windows.zip">
+          <span class="ic">⊞</span><span>Baixar para Windows<small id="szWin">.zip</small></span>
+        </a>
+      </div>
+      <div>
+        <a class="btn" id="dlMac" href="downloads/Mypheed-macOS.tar.gz">
+          <span class="ic"></span><span>Baixar para macOS<small id="szMac">.tar.gz</small></span>
+        </a>
+      </div>
+    </div>
+    <p class="meta-line"><b>Grátis</b> · <span id="ver">v0.1.0</span> · roda 100% local — suas fotos não saem da sua máquina</p>
+
+    <div class="shot" aria-label="Tela do Mypheed">
+      <div class="titlebar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="tb-title">Mypheed — culling de fotos</span></div>
+      <div class="toolbar">
+        <span class="tbtn hot">Abrir pasta…</span><span class="tbtn">Importar cartão…</span><span class="tbtn">Catálogo</span>
+        <span class="tbtn">★ Estrelas IA…</span><span class="tbtn">Exportar…</span><span class="tbtn">Enviar para o Lightroom</span>
+      </div>
+      <div class="grid">
+        <div class="cell cursor">
+          <div class="thumbwrap"><img src="img/demo/LEO_0231.jpg" alt="Noivos dançando — 3 estrelas, pick">
+            <div class="badges"><span class="stars">★★★</span><span class="flagtag pick">PICK</span><span class="colordot" style="background:#46a758"></span></div>
+          </div>
+          <div class="cap"><span>LEO_0231</span><span class="ft">JPEG</span></div>
+        </div>
+        <div class="cell">
+          <div class="thumbwrap"><img src="img/demo/LEO_0232.jpg" alt="Alianças — 2 estrelas">
+            <div class="badges"><span class="stars">★★</span></div>
+          </div>
+          <div class="cap"><span>LEO_0232</span><span class="ft">JPEG</span></div>
+        </div>
+        <div class="cell">
+          <div class="thumbwrap"><img src="img/demo/LEO_0233.jpg" alt="Mesa decorada — 1 estrela">
+            <div class="badges"><span class="stars">★</span></div>
+          </div>
+          <div class="cap"><span>LEO_0233</span><span class="ft">JPEG</span></div>
+        </div>
+        <div class="cell">
+          <div class="thumbwrap"><img src="img/demo/LEO_0234.jpg" alt="Brinde — 2 estrelas, cor amarela">
+            <div class="badges"><span class="stars">★★</span><span class="colordot" style="background:#d6a44a"></span></div>
+          </div>
+          <div class="cap"><span>LEO_0234</span><span class="ft">JPEG</span></div>
+        </div>
+        <div class="cell">
+          <div class="thumbwrap"><img src="img/demo/LEO_0235.jpg" alt="Buquê — 3 estrelas, pick">
+            <div class="badges"><span class="stars">★★★</span><span class="flagtag pick">PICK</span></div>
+          </div>
+          <div class="cap"><span>LEO_0235</span><span class="ft">JPEG</span></div>
+        </div>
+        <div class="cell">
+          <div class="thumbwrap"><img src="img/demo/LEO_0236.jpg" alt="Pista de dança — 1 estrela">
+            <div class="badges"><span class="stars">★</span></div>
+          </div>
+          <div class="cap"><span>LEO_0236</span><span class="ft">JPEG</span></div>
+        </div>
+      </div>
+      <div class="statusbar">6 itens · <b>2 picks</b> · 0 rejeitadas · ordenado por captura · A auto-avanço ligado</div>
+    </div>
+  </div>
+
+  <section id="recursos">
+    <h2>Feito para o dia seguinte do evento</h2>
+    <p class="sub">Culling e organização no espírito do Photo Mechanic — direto ao ponto, sem assinatura, sem nuvem obrigatória.</p>
+    <div class="features">
+      <div class="card"><span class="em">⚡</span>
+        <h3>Rápido de verdade</h3>
+        <p>Em vez de renderizar o RAW, o Mypheed extrai o preview que a câmera já gravou. A grade é virtualizada e o EXIF carrega em segundo plano — milhares de fotos sem travar.</p>
+      </div>
+      <div class="card"><span class="em">⌨️</span>
+        <h3>Uma tecla por decisão</h3>
+        <p><kbd>0–5</kbd> estrelas, cores <kbd>R</kbd><kbd>Y</kbd><kbd>G</kbd><kbd>B</kbd><kbd>V</kbd>, <kbd>P</kbd> pick, <kbd>X</kbd> reject, auto-avanço, zoom 100%, comparação de rajadas lado a lado e undo/redo do culling inteiro. Atalhos remapeáveis.</p>
+      </div>
+      <div class="card"><span class="em">🛡️</span>
+        <h3>Não-destrutivo</h3>
+        <p>O RAW nunca é alterado. O culling fica em sidecar; rejeitadas vão para uma subpasta reversível; excluir manda para a Lixeira do sistema — no Windows e no Mac.</p>
+      </div>
+      <div class="card"><span class="em">🔗</span>
+        <h3>Direto para o Lightroom</h3>
+        <p>Estrelas e cores viram <code>XMP:Rating</code>/<code>XMP:Label</code>, que Lightroom e Capture One leem. Um clique abre a importação do Lightroom já com a sua seleção.</p>
+      </div>
+      <div class="card"><span class="em">🗂️</span>
+        <h3>Ingestão e catálogo</h3>
+        <p>Copia 2+ cartões numa passada com verificação e backup simultâneo — o cartão nunca é alterado. O catálogo busca a coleção inteira (nome, legenda, câmera, keyword), até com o HD desconectado.</p>
+      </div>
+      <div class="card"><span class="em">✨</span>
+        <h3>IA opcional, você no comando</h3>
+        <p>Pré-seleção local por foco/exposição (sem custo), aviso de piscada e rajadas quase idênticas, estrelas por IA com rubrica editável e legendas em português. Tudo sugere; quem aplica é você.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="instalar">
+    <h2>Como instalar</h2>
+    <p class="sub">O Mypheed roda sobre o Node.js 24+ (gratuito) — os instaladores conferem e orientam se faltar.</p>
+
+    <div class="tabs" role="tablist">
+      <button id="tabWinBtn" class="on" onclick="showTab('win')">⊞ Windows</button>
+      <button id="tabMacBtn" onclick="showTab('mac')"> macOS</button>
+    </div>
+
+    <div class="tabpane" id="tabWin">
+      <ol class="steps">
+        <li><a href="downloads/Mypheed-Windows.zip">Baixe o <b>Mypheed-Windows.zip</b></a> e extraia para uma pasta sua (botão direito → <i>Extrair Tudo…</i>).</li>
+        <li>Dê clique duplo em <code>Instalar-Mypheed.bat</code> — ele confere o Node.js, baixa as dependências e cria os atalhos com ícone no Desktop e no Menu Iniciar.</li>
+        <li>Abra pelo ícone <b>Mypheed</b>: o servidor local sobe sozinho e a janela abre como um app.</li>
+      </ol>
+      <div class="note">Se o Windows avisar sobre "editor desconhecido" ao rodar o instalador: <b>Mais informações → Executar assim mesmo</b>. Se o Node.js não estiver instalado, o instalador abre a página oficial — instale a versão LTS e rode o instalador de novo.</div>
+    </div>
+
+    <div class="tabpane" id="tabMac" hidden>
+      <p style="margin-top:0"><b>Jeito recomendado</b> — cole no Terminal (⌘+Espaço, digite “Terminal”):</p>
+      <div class="cmd"><code id="macCmd">curl -fsSL https://mypheed.myph.com.br/install-mac.sh | bash</code><button onclick="copyCmd()">copiar</button></div>
+      <p style="color:var(--muted);font-size:14px">Baixa o Mypheed para <code>~/Mypheed</code>, instala as dependências e cria o app <b>Mypheed</b> no Launchpad. Rodar o mesmo comando de novo atualiza para a versão mais recente.</p>
+      <p><b>Ou manualmente:</b></p>
+      <ol class="steps">
+        <li><a href="downloads/Mypheed-macOS.tar.gz">Baixe o <b>Mypheed-macOS.tar.gz</b></a> e dê clique duplo para extrair.</li>
+        <li>No Terminal: <code>bash ~/Downloads/Mypheed/Instalar-Mypheed.command</code></li>
+        <li>Abra o <b>Mypheed</b> pelo Launchpad (arraste para o Dock se quiser).</li>
+      </ol>
+      <div class="note">Requer Node.js 24+ (o instalador abre a página se faltar). Na primeira exclusão de fotos o macOS pede permissão para o Node controlar o Finder — é a Lixeira; clique em <b>Permitir</b>. Se aparecer “desenvolvedor não identificado”, use clique direito → <b>Abrir</b>.</div>
+    </div>
+
+    <div class="dl-meta" id="dlMeta"></div>
+  </section>
+
+  <section id="faq">
+    <h2>Perguntas frequentes</h2>
+    <p class="sub"></p>
+    <details>
+      <summary>É grátis mesmo?</summary>
+      <p>Sim. Sem assinatura, sem conta, sem limite de fotos. Os recursos de IA (estrelas e legendas) são os únicos que usam um serviço pago — e são opcionais, com a sua própria chave da Anthropic.</p>
+    </details>
+    <details>
+      <summary>Minhas fotos saem do computador?</summary>
+      <p>Não. O Mypheed é um servidor local que abre no seu navegador — culling, catálogo e exportação acontecem na sua máquina. Só os recursos de IA, quando você aciona, enviam previews pequenos para análise.</p>
+    </details>
+    <details>
+      <summary>Funciona com o RAW da minha câmera?</summary>
+      <p>Canon (CR2/CR3), Nikon (NEF), Sony (ARW), Fujifilm (RAF) e dezenas de outros formatos via ExifTool — qualquer RAW com preview embutido, além de JPEG, TIFF, PNG e vídeos. Pares RAW+JPEG viram um item só.</p>
+    </details>
+    <details>
+      <summary>Por que preciso do Node.js?</summary>
+      <p>O Node é o motor que roda o servidor local do Mypheed (leitura de previews, XMP, catálogo SQLite). É gratuito, de código aberto, e o instalador do Mypheed confere tudo para você.</p>
+    </details>
+    <details>
+      <summary>Como atualizo o Mypheed?</summary>
+      <p>Windows: baixe o zip novo e extraia por cima da pasta. macOS: rode de novo o comando de instalação. Suas configurações, catálogo e cache ficam fora da pasta do programa — nada se perde.</p>
+    </details>
+    <details>
+      <summary>O culling aparece no Lightroom?</summary>
+      <p>Sim: estrelas e cores são gravadas em XMP padrão (sidecar para RAW; embutido em JPEG/TIFF). O botão “Enviar para o Lightroom” abre a importação já filtrada na sua seleção.</p>
+    </details>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Mypheed — feito por um fotógrafo, para fotógrafos.</span>
+    <span class="sp">Parte da família <a href="https://myph.com.br">myph.com.br</a></span>
+  </div>
+</footer>
+
+<script>
+  // Destaca o download do sistema do visitante e ajusta o clique do header.
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform) || /Macintosh/.test(navigator.userAgent);
+  if (isMac) {
+    document.getElementById('dlMac').classList.add('primary');
+    document.getElementById('dlWin').classList.remove('primary');
+    showTab('mac');
+  }
+
+  function showTab(t) {
+    document.getElementById('tabWin').hidden = t !== 'win';
+    document.getElementById('tabMac').hidden = t !== 'mac';
+    document.getElementById('tabWinBtn').classList.toggle('on', t === 'win');
+    document.getElementById('tabMacBtn').classList.toggle('on', t === 'mac');
+  }
+
+  function copyCmd() {
+    navigator.clipboard.writeText(document.getElementById('macCmd').textContent).then(() => {
+      const b = document.querySelector('.cmd button'); b.textContent = 'copiado!';
+      setTimeout(() => (b.textContent = 'copiar'), 1600);
+    });
+  }
+
+  // Tamanho/versão/checksum vêm do versao.json gerado junto com os pacotes.
+  fetch('downloads/versao.json').then((r) => r.json()).then((m) => {
+    const mb = (b) => (b / 1024 / 1024).toFixed(1).replace('.', ',') + ' MB';
+    const w = m.files['Mypheed-Windows.zip'], x = m.files['Mypheed-macOS.tar.gz'];
+    document.getElementById('ver').textContent = 'v' + m.version;
+    if (w) document.getElementById('szWin').textContent = '.zip · ' + mb(w.bytes);
+    if (x) document.getElementById('szMac').textContent = '.tar.gz · ' + mb(x.bytes);
+    if (w && x) document.getElementById('dlMeta').innerHTML =
+      '<details><summary>Verificação dos pacotes (SHA-256)</summary>' +
+      '<p>Mypheed-Windows.zip<br><code>' + w.sha256 + '</code></p>' +
+      '<p>Mypheed-macOS.tar.gz<br><code>' + x.sha256 + '</code></p></details>';
+  }).catch(() => {});
+</script>
+</body>
+</html>

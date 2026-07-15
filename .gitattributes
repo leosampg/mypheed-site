@@ -1,0 +1,3 @@
+# O install-mac.sh é servido cru pelo Pages e executado via curl|bash — LF sempre.
+install-mac.sh text eol=lf
+CNAME text eol=lf
