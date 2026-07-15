@@ -1,14 +1,14 @@
 {
   "version": "0.1.0",
-  "builtAt": "2026-07-15T18:48:40.386Z",
+  "builtAt": "2026-07-15T19:20:52.997Z",
   "files": {
     "Mypheed-Windows.zip": {
-      "bytes": 4404203,
-      "sha256": "fc540b60f10e18d9427c35af9ef50118dfe36d6e0d5e4973f1a25e45855e5f9a"
+      "bytes": 4404141,
+      "sha256": "912055c815d2646621aebb14bd0b0b169cd7bd106fd081c8b9a1a9b08cd9fdbd"
     },
     "Mypheed-macOS.tar.gz": {
-      "bytes": 4361454,
-      "sha256": "ec49a606fb9955f6aab63d33b45c168edbc032b3b2c3d65185d0051fb326ddaf"
+      "bytes": 4361395,
+      "sha256": "8ab53b19dd75654390dd98e283c824800235076e743618a0f66619588d77713d"
     }
   }
 }
